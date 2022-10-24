@@ -42,14 +42,8 @@
     ! starting/ending index of array with halo cells
     integer :: xs, ys, zs, xe, ye, ze
 
-    integer :: i, j, k, s1, s2, s3, ierror
+    integer :: i, j, k, s1, s2, s3
     integer :: data_type
-
-    integer :: icount, ilength, ijump
-    integer :: halo12, halo21, halo31, halo32
-    integer, dimension(4) :: requests
-    integer, dimension(MPI_STATUS_SIZE,4) :: status
-    integer :: tag_e, tag_w, tag_n, tag_s, tag_t, tag_b
 
     integer :: ipencil
     logical, save :: first_call_x = .true., first_call_y = .true., first_call_z = .true.
@@ -91,14 +85,8 @@
     ! starting/ending index of array with halo cells
     integer :: xs, ys, zs, xe, ye, ze
 
-    integer :: i, j, k, s1, s2, s3, ierror
+    integer :: i, j, k, s1, s2, s3
     integer :: data_type
-
-    integer :: icount, ilength, ijump
-    integer :: halo12, halo21, halo31, halo32
-    integer, dimension(4) :: requests
-    integer, dimension(MPI_STATUS_SIZE,4) :: status
-    integer :: tag_e, tag_w, tag_n, tag_s, tag_t, tag_b
 
     integer :: ipencil
     logical, save :: first_call_x = .true., first_call_y = .true., first_call_z = .true.
@@ -120,12 +108,12 @@
 
     TYPE(DECOMP_INFO) :: decomp
     integer :: level_x, level_y, level_z
-    integer :: i, j, k, ierror
+    integer :: ierror
     integer :: icount, ilength, ijump
-    integer :: halo12, halo21, halo31, halo32
+    integer :: halo12
     integer, dimension(4) :: requests
     integer, dimension(MPI_STATUS_SIZE,4) :: status
-    integer :: tag_e, tag_w, tag_n, tag_s, tag_t, tag_b
+    integer :: tag_n, tag_s, tag_t, tag_b
     integer :: data_type
     integer :: xs, ys, zs, ye, ze, s1, s2, s3
 
@@ -147,12 +135,12 @@
 
     TYPE(DECOMP_INFO) :: decomp
     integer :: level_x, level_y, level_z
-    integer :: i, j, k, ierror
+    integer :: ierror
     integer :: icount, ilength, ijump
-    integer :: halo12, halo21, halo31, halo32
+    integer :: halo12
     integer, dimension(4) :: requests
     integer, dimension(MPI_STATUS_SIZE,4) :: status
-    integer :: tag_e, tag_w, tag_n, tag_s, tag_t, tag_b
+    integer :: tag_n, tag_s, tag_t, tag_b
     integer :: data_type
     integer :: xs, ys, zs, ye, ze, s1, s2, s3
 
@@ -174,12 +162,12 @@
 
     TYPE(DECOMP_INFO) :: decomp
     integer :: level_x, level_y, level_z
-    integer :: i, j, k, ierror
+    integer :: ierror
     integer :: icount, ilength, ijump
-    integer :: halo12, halo21, halo31, halo32
+    integer :: halo21
     integer, dimension(4) :: requests
     integer, dimension(MPI_STATUS_SIZE,4) :: status
-    integer :: tag_e, tag_w, tag_n, tag_s, tag_t, tag_b
+    integer :: tag_e, tag_w, tag_t, tag_b
     integer :: data_type
     integer :: xs, ys, zs, xe, ze, s1, s2, s3
 
@@ -201,12 +189,12 @@
 
     TYPE(DECOMP_INFO) :: decomp
     integer :: level_x, level_y, level_z
-    integer :: i, j, k, ierror
+    integer :: ierror
     integer :: icount, ilength, ijump
-    integer :: halo12, halo21, halo31, halo32
+    integer :: halo21
     integer, dimension(4) :: requests
     integer, dimension(MPI_STATUS_SIZE,4) :: status
-    integer :: tag_e, tag_w, tag_n, tag_s, tag_t, tag_b
+    integer :: tag_e, tag_w, tag_t, tag_b
     integer :: data_type
     integer :: xs, ys, zs, xe, ze, s1, s2, s3
 
@@ -226,12 +214,12 @@
 
     TYPE(DECOMP_INFO) :: decomp
     integer :: level_x, level_y, level_z
-    integer :: i, j, k, ierror
+    integer :: ierror
     integer :: icount, ilength, ijump
-    integer :: halo12, halo21, halo31, halo32
+    integer :: halo31, halo32
     integer, dimension(4) :: requests
     integer, dimension(MPI_STATUS_SIZE,4) :: status
-    integer :: tag_e, tag_w, tag_n, tag_s, tag_t, tag_b
+    integer :: tag_e, tag_w, tag_n, tag_s
     integer :: data_type
     integer :: xs, ys, zs, xe, ye, s1, s2, s3
 
@@ -252,12 +240,12 @@
 
     TYPE(DECOMP_INFO) :: decomp
     integer :: level_x, level_y, level_z
-    integer :: i, j, k, ierror
+    integer :: ierror
     integer :: icount, ilength, ijump
-    integer :: halo12, halo21, halo31, halo32
+    integer :: halo31, halo32
     integer, dimension(4) :: requests
     integer, dimension(MPI_STATUS_SIZE,4) :: status
-    integer :: tag_e, tag_w, tag_n, tag_s, tag_t, tag_b
+    integer :: tag_e, tag_w, tag_n, tag_s
     integer :: data_type
     integer :: xs, ys, zs, xe, ye, s1, s2, s3
 
