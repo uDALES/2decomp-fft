@@ -52,10 +52,9 @@ contains
 
     print *, "Testing x halo exchange"
     
-    do nlevels = 0, 5
+    do nlevels = 1, 5
 
        allocate(u(nx, 1-nlevels:ny+nlevels, 1-nlevels:nz+nlevels))
-       print *, nlevels, size(u, 1), size(u, 2), size(u, 3)
        u(:,:,:) = 0.0_mytype
 
        call exchange_halo_x(u, opt_xlevel=(/ 0, nlevels, nlevels /))
