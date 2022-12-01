@@ -64,10 +64,9 @@ contains
        levels=(/ xhalo * nlevels, yhalo * nlevels, zhalo * nlevels /)
        
        allocate(u(1-levels(1):xsize(1)+levels(1), 1-levels(2):xsize(2)+levels(2), 1-levels(3):xsize(3)+levels(3)))
-       call local_init(xstart, xsize, levels, u)
-       
-       call exchange_halo_x(u, opt_xlevel=levels)
 
+       call local_init(xstart, xsize, levels, u)
+       call exchange_halo_x(u, opt_xlevel=levels)
        call check(xstart, xend, xsize, levels, u)
        
        deallocate(u)
