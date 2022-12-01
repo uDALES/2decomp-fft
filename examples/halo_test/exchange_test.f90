@@ -31,7 +31,7 @@ program exchange_test
   end if
   
   ! Run tests
-  call test_exchange_x
+  call test_exchange("X")
 
   ! Finalise
   call decomp_2d_finalize
@@ -42,38 +42,64 @@ program exchange_test
   
 contains
 
-  !! TEST test_exchange_x
-  !    Tests that the halo exchange in x pencil works.
+  !! TEST test_exchange
+  !    Tests that the halo exchange in given pencil works.
   !    Given a pre-allocated array with halo buffers this should fill the halo buffers with the
   !    correct data.
   !    Should test a range of halo levels.
   !    - Corner case: zero halo levels.
-  subroutine test_exchange_x
+  subroutine test_exchange(orientation)
 
+    character(len=*), intent(in) :: orientation
+    
     real(mytype), dimension(:,:,:), allocatable :: u
     integer :: nlevels
     integer, dimension(3) :: levels
 
     integer :: xhalo, yhalo, zhalo
+    integer, dimension(3) :: starts, ends, sizes
 
-    xhalo = 0
-    yhalo = 1
-    zhalo = 1
+    xhalo = 1; yhalo = 1; zhalo = 1
+    if (orientation == "X") then
+       xhalo = 0
+       starts = xstart
+       ends = xend
+       sizes = xsize
+    else if (orientation == "Y") then
+       yhalo = 0
+       starts = ystart
+       ends = yend
+       sizes = ysize
+    else if (orientation == "Z") then
+       zhalo = 0
+       starts = zstart
+       ends = zend
+       sizes = zsize
+    else
+       print *, "ERROR: Unknow orientation "//orientation//" test is broken!"
+       stop
+    end if
     
     do nlevels = 1, 3
        levels=(/ xhalo * nlevels, yhalo * nlevels, zhalo * nlevels /)
        
-       allocate(u(1-levels(1):xsize(1)+levels(1), 1-levels(2):xsize(2)+levels(2), 1-levels(3):xsize(3)+levels(3)))
+       allocate(u(1-levels(1):sizes(1)+levels(1), 1-levels(2):sizes(2)+levels(2), 1-levels(3):sizes(3)+levels(3)))
 
-       call local_init(xstart, xsize, levels, u)
-       call exchange_halo_x(u, opt_xlevel=levels)
-       call check(xstart, xend, xsize, levels, u)
+       call local_init(starts, sizes, levels, u)
+       if (orientation == "X") then
+          call exchange_halo_x(u, opt_xlevel=levels)
+       else if (orientation == "Y") then
+          call exchange_halo_y(u, opt_ylevel=levels)
+       else 
+          call exchange_halo_z(u, opt_zlevel=levels)
+       end if
+       call check(starts, ends, sizes, levels, u)
        
        deallocate(u)
        
     end do
     
-  end subroutine test_exchange_x
+  end subroutine test_exchange
 
   subroutine check(starts, ends, sizes, levels, u)
 
