@@ -32,6 +32,8 @@ program exchange_test
   
   ! Run tests
   call test_exchange("X")
+  call test_exchange("Y")
+  call test_exchange("Z")
 
   ! Finalise
   call decomp_2d_finalize
@@ -58,6 +60,10 @@ contains
 
     integer :: xhalo, yhalo, zhalo
     integer, dimension(3) :: starts, ends, sizes
+
+    if (nrank == 0) then
+       print *, "- Orientation: "//orientation
+    end if
 
     xhalo = 1; yhalo = 1; zhalo = 1
     if (orientation == "X") then
