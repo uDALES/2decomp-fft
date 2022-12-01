@@ -5,13 +5,16 @@ FFLAGS := $(subst $(MODFLAG),$(MODFLAG)../../,$(FFLAGS))
 FFLAGS := $(patsubst -I%,-I../../%,$(FFLAGS))
 LIBS = -L../../ -l$(LIBDECOMP) $(LFLAGS)
 
-OBJ = halo_test.o
-
 NP ?= 1
 MPIRUN ?= mpirun
 
-halo_test: $(OBJ)
-	$(FC) $(FFLAGS) $(OPT) $(DEFS) $(INC) -o $@ $(OBJ) $(LIBS)
+all: halo_test exchange_test
+
+halo_test: halo_test.o
+	$(FC) $(FFLAGS) $(OPT) $(DEFS) $(INC) -o $@ $^ $(LIBS)
+
+exchange_test: exchange_test.o
+	$(FC) $(FFLAGS) $(OPT) $(DEFS) $(INC) -o $@ $^ $(LIBS)
 
 ifeq ($(PARAMOD),gpu)
 check:
@@ -22,7 +25,7 @@ check:
 endif
 
 clean:
-	rm -f *.o halo_test *.log
+	rm -f *.o halo_test exchange_test  *.log
 
 %.o : %.f90
 	$(FC) $(FFLAGS) $(OPT) $(DEFS) $(INC) -c $< -o $@
