@@ -17,9 +17,12 @@ program exchange_test
   integer :: p_row, p_col
 
   integer :: ierr
+
+  logical :: passing
   
   ! Initialise
   p_row = 0; p_col = 0
+  passing = .true.
   
   call MPI_Init(ierr)
   if (ierr /= 0) then
@@ -34,6 +37,13 @@ program exchange_test
   call test_exchange("X")
   call test_exchange("Y")
   call test_exchange("Z")
+
+  if (nrank == 0) then
+     if (.not. passing) then
+        print *, "Exchange test failed"
+        stop 1
+     end if
+  end if
 
   ! Finalise
   call decomp_2d_finalize
@@ -61,9 +71,7 @@ contains
     integer :: xhalo, yhalo, zhalo
     integer, dimension(3) :: starts, ends, sizes
 
-    if (nrank == 0) then
-       print *, "- Orientation: "//orientation
-    end if
+    logical :: orientation_passing
 
     xhalo = 1; yhalo = 1; zhalo = 1
     if (orientation == "X") then
@@ -99,24 +107,38 @@ contains
        else 
           call exchange_halo_z(u, opt_zlevel=levels)
        end if
-       call check(starts, ends, sizes, levels, u)
+       call check(starts, ends, sizes, levels, u, orientation_passing)
        
        deallocate(u)
        
     end do
+
+    if (nrank == 0) then
+       print *, "+ Orientation: "//orientation
+       if (orientation_passing) then
+          print *, "+- PASS"
+       else
+          print *, "+- FAIL"
+       end if
+    end if
+
+    passing = passing .and. orientation_passing
     
   end subroutine test_exchange
 
-  subroutine check(starts, ends, sizes, levels, u)
+  subroutine check(starts, ends, sizes, levels, u, passing)
 
     integer, dimension(3), intent(in) :: starts, ends, sizes, levels
     real(mytype), dimension(:,:,:), intent(in) :: u
+    logical, intent(out) :: passing
     
     integer :: is, ie, js, je, ks, ke
     integer :: i, j, k
     integer :: io, jo, ko
     integer :: idx
 
+    passing = .true.
+    
     call valid_range(starts(1), ends(1), sizes(1), nx, levels(1), is, ie)
     call valid_range(starts(2), ends(2), sizes(2), ny, levels(2), js, je)
     call valid_range(starts(3), ends(3), sizes(3), nz, levels(3), ks, ke)
@@ -130,10 +152,14 @@ contains
              call global_index(i, j, k, starts, idx)
              if (u(io, jo, ko) /= real(idx, mytype)) then
                 print *, "ERROR:", nrank, u(io, jo, ko), real(idx, mytype), idx, i, j, k
+                passing = .false.
              end if
           end do
        end do
     end do
+
+    call MPI_Allreduce(MPI_IN_PLACE, passing, 1, MPI_LOGICAL, MPI_LAND, MPI_COMM_WORLD, ierr)
+    
   end subroutine check
   
   subroutine local_init(starts, sizes, levels, u)
