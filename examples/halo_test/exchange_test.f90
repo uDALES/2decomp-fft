@@ -73,37 +73,10 @@ contains
 
        call exchange_halo_x(u, opt_xlevel=(/ 0, nlevels, nlevels /))
 
-       if (xstart(1) == 1) then
-          is = 1
-       else
-          is = 1 - nlevels
-       end if
-       if (xend(1) == nx) then
-          ie = xsize(1)
-       else
-          ie = xsize(1) + nlevels
-       end if
-       if (xstart(2) == 1) then
-          js = 1
-       else
-          js = 1 - nlevels
-       end if
-       if (xend(2) == ny) then
-          je = xsize(2)
-       else
-          je = xsize(2) + nlevels
-       end if
-       if (xstart(3) == 1) then
-          ks = 1
-       else
-          ks = 1 - nlevels
-       end if
-       if (xend(3) == nz) then
-          ke = xsize(3)
-       else
-          ke = xsize(3) + nlevels
-       end if
-       
+       call valid_range(xstart(1), xend(1), xsize(1), nx, nlevels, is, ie)
+       call valid_range(xstart(2), xend(2), xsize(2), ny, nlevels, js, je)
+       call valid_range(xstart(3), xend(3), xsize(3), nz, nlevels, ks, ke)
+
        do k = ks, ke
           do j = js, je
              do i = is, ie
@@ -120,6 +93,27 @@ contains
     
   end subroutine test_exchange_x
 
+  subroutine valid_range(pencil_start, pencil_end, pencil_size, nglobal, nlevels, s, e)
+
+    integer, intent(in) :: pencil_start, pencil_end, pencil_size
+    integer, intent(in) :: nglobal
+    integer, intent(in) :: nlevels
+    integer, intent(out) :: s, e
+
+    if (pencil_start == 1) then
+       s = 1
+    else
+       s = 1 - nlevels
+    end if
+
+    if (pencil_end == nglobal) then
+       e = pencil_size
+    else
+       e = pencil_size + nlevels
+    end if
+    
+  end subroutine valid_range
+  
   subroutine global_index(i, j, k, starts, idx)
 
     integer, intent(in) :: i, j, k
