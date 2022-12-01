@@ -52,47 +52,82 @@ contains
 
     real(mytype), dimension(:,:,:), allocatable :: u
     integer :: nlevels
+    integer, dimension(3) :: levels
 
-    integer :: i, j, k
-    integer :: is, ie, js, je, ks, ke
-    integer :: idx
+    integer :: xhalo, yhalo, zhalo
+
+    xhalo = 0
+    yhalo = 1
+    zhalo = 1
     
     do nlevels = 1, 3
+       levels=(/ xhalo * nlevels, yhalo * nlevels, zhalo * nlevels /)
+       
+       allocate(u(1-levels(1):xsize(1)+levels(1), 1-levels(2):xsize(2)+levels(2), 1-levels(3):xsize(3)+levels(3)))
+       call local_init(xstart, xsize, levels, u)
+       
+       call exchange_halo_x(u, opt_xlevel=levels)
 
-       allocate(u(xsize(1), 1-nlevels:xsize(2)+nlevels, 1-nlevels:xsize(3)+nlevels))
-
-       u(:,:,:) = 0.0_mytype
-       do k = 1, xsize(3)
-          do j = 1, xsize(2)
-             do i = 1, xsize(1)
-                call global_index(i, j, k, xstart, idx)
-                u(i, j, k) = real(idx, mytype)
-             end do
-          end do
-       end do
-
-       call exchange_halo_x(u, opt_xlevel=(/ 0, nlevels, nlevels /))
-
-       call valid_range(xstart(1), xend(1), xsize(1), nx, nlevels, is, ie)
-       call valid_range(xstart(2), xend(2), xsize(2), ny, nlevels, js, je)
-       call valid_range(xstart(3), xend(3), xsize(3), nz, nlevels, ks, ke)
-
-       do k = ks, ke
-          do j = js, je
-             do i = is, ie
-                call global_index(i, j, k, xstart, idx)
-                if (u(i, j, k) /= real(idx, mytype)) then
-                   print *, "ERROR:", nrank, u(i, j, k), real(idx, mytype), idx, i, j, k
-                end if
-             end do
-          end do
-       end do
+       call check(xstart, xend, xsize, levels, u)
+       
        deallocate(u)
        
     end do
     
   end subroutine test_exchange_x
 
+  subroutine check(starts, ends, sizes, levels, u)
+
+    integer, dimension(3), intent(in) :: starts, ends, sizes, levels
+    real(mytype), dimension(:,:,:), intent(in) :: u
+    
+    integer :: is, ie, js, je, ks, ke
+    integer :: i, j, k
+    integer :: io, jo, ko
+    integer :: idx
+
+    call valid_range(starts(1), ends(1), sizes(1), nx, levels(1), is, ie)
+    call valid_range(starts(2), ends(2), sizes(2), ny, levels(2), js, je)
+    call valid_range(starts(3), ends(3), sizes(3), nz, levels(3), ks, ke)
+
+    do k = ks, ke
+       ko = k + levels(3)
+       do j = js, je
+          jo = j + levels(2)
+          do i = is, ie
+             io = i + levels(1)
+             call global_index(i, j, k, starts, idx)
+             if (u(io, jo, ko) /= real(idx, mytype)) then
+                print *, "ERROR:", nrank, u(io, jo, ko), real(idx, mytype), idx, i, j, k
+             end if
+          end do
+       end do
+    end do
+  end subroutine check
+  
+  subroutine local_init(starts, sizes, levels, u)
+
+    integer, dimension(3), intent(in) :: starts, sizes, levels
+    real(mytype), dimension(:,:,:), intent(inout) :: u
+
+    integer :: i, j, k, idx
+    integer :: io, jo, ko
+
+    u(:,:,:) = 0.0_mytype
+    do k = 1, sizes(3)
+       ko = k + levels(3)
+       do j = 1, sizes(2)
+          jo = j + levels(2)
+          do i = 1, sizes(1)
+             io = i + levels(1)
+             call global_index(i, j, k, starts, idx)
+             u(io, jo, ko) = real(idx, mytype)
+          end do
+       end do
+    end do
+    
+  end subroutine local_init
+  
   subroutine valid_range(pencil_start, pencil_end, pencil_size, nglobal, nlevels, s, e)
 
     integer, intent(in) :: pencil_start, pencil_end, pencil_size
