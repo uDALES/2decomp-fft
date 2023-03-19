@@ -263,9 +263,9 @@ contains
        end do
     end do
 
-    call exchange_halo_x(uh, opt_xlevel=(/ 1, 1, 1 /))
-    call exchange_halo_x(vh, opt_xlevel=(/ 1, 1, 1 /))
-    call exchange_halo_x(wh, opt_xlevel=(/ 1, 1, 1 /))
+    call exchange_halo_x(uh, opt_xlevel=(/ 0, 1, 1 /))
+    call exchange_halo_x(vh, opt_xlevel=(/ 0, 1, 1 /))
+    call exchange_halo_x(wh, opt_xlevel=(/ 0, 1, 1 /))
     
     div2 = 0.0_mytype
     do k=k1,kn
