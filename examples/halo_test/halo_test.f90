@@ -369,18 +369,10 @@ contains
        end do
     end do
 
-    call MPI_Barrier(MPI_COMM_WORLD, ierror)
-    print *, nrank, "Exchange X"
-    call exchange_halo_y(uh, opt_ylevel=(/ 1, 1, 1 /))
-    call MPI_Barrier(MPI_COMM_WORLD, ierror)
-    print *, nrank, "Exchange Y"
-    call exchange_halo_y(vh, opt_ylevel=(/ 1, 1, 1 /))
-    call MPI_Barrier(MPI_COMM_WORLD, ierror)
-    print *, nrank, "Exchange Z"
-    call exchange_halo_y(wh, opt_ylevel=(/ 1, 1, 1 /))
+    call exchange_halo_y(uh, opt_ylevel=(/ 1, 0, 1 /))
+    call exchange_halo_y(vh, opt_ylevel=(/ 1, 0, 1 /))
+    call exchange_halo_y(wh, opt_ylevel=(/ 1, 0, 1 /))
 
-    call MPI_Barrier(MPI_COMM_WORLD, ierror)
-    print *, "Compute DIV"
     do k=k1,kn
        do j=j1,jn
           do i=i1,in
@@ -391,16 +383,12 @@ contains
        end do
     end do
 
-    call MPI_Barrier(MPI_COMM_WORLD, ierror)
-    print *, "TRANSPOSE"
     call transpose_y_to_x(wk2,div3)
 
     ! Compute error
-    print *, "CHECK"
     call check_err(div3, "(exchange) Y")
 
     deallocate(uh, vh, wh)
-
     deallocate(wk2)
     
   end subroutine test_div_haloY
