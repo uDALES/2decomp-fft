@@ -249,6 +249,10 @@ contains
     allocate(vh(i1-1:in+1, j1-1:jn+1, k1-1:kn+1))
     allocate(wh(i1-1:in+1, j1-1:jn+1, k1-1:kn+1))
 
+    call test_halo_size(uh, nx_expected, ny_expected, nz_expected, "(exchange) X:u")
+    call test_halo_size(vh, nx_expected, ny_expected, nz_expected, "(exchange) X:v")
+    call test_halo_size(wh, nx_expected, ny_expected, nz_expected, "(exchange) X:w")
+
     do k=k1,kn
        do j=j1,jn
           do i=i1-1,in+1 ! Boundary conditions
@@ -344,8 +348,61 @@ contains
     ! Compute error
     call check_err(div3, "Y")
 
-    deallocate(uh,wh,wk2)
+    deallocate(uh,wh)
+    
+    !! Check exchange (preallocated) version.
+    allocate(uh(i1-1:in+1, j1-1:jn+1, k1-1:kn+1))
+    allocate(vh(i1-1:in+1, j1-1:jn+1, k1-1:kn+1))
+    allocate(wh(i1-1:in+1, j1-1:jn+1, k1-1:kn+1))
 
+    call test_halo_size(uh, nx_expected, ny_expected, nz_expected, "(exchange) Y:u")
+    call test_halo_size(vh, nx_expected, ny_expected, nz_expected, "(exchange) Y:v")
+    call test_halo_size(wh, nx_expected, ny_expected, nz_expected, "(exchange) Y:w")
+    
+    do k=k1,kn
+       do j=j1-1,jn+1 ! Boundary conditions
+          do i=i1,in
+             uh(i, j, k) = u2(i, j, k)
+             vh(i, j, k) = v2(i, j, k)
+             wh(i, j, k) = w2(i, j, k)
+          end do
+       end do
+    end do
+
+    call MPI_Barrier(MPI_COMM_WORLD, ierror)
+    print *, nrank, "Exchange X"
+    call exchange_halo_y(uh, opt_ylevel=(/ 1, 1, 1 /))
+    call MPI_Barrier(MPI_COMM_WORLD, ierror)
+    print *, nrank, "Exchange Y"
+    call exchange_halo_y(vh, opt_ylevel=(/ 1, 1, 1 /))
+    call MPI_Barrier(MPI_COMM_WORLD, ierror)
+    print *, nrank, "Exchange Z"
+    call exchange_halo_y(wh, opt_ylevel=(/ 1, 1, 1 /))
+
+    call MPI_Barrier(MPI_COMM_WORLD, ierror)
+    print *, "Compute DIV"
+    do k=k1,kn
+       do j=j1,jn
+          do i=i1,in
+             wk2(i,j,k) = (uh(i+1,j,k)-uh(i-1,j,k)) &
+                  + (vh(i,j+1,k)-vh(i,j-1,k)) &
+                  + (wh(i,j,k+1)-wh(i,j,k-1))
+          end do
+       end do
+    end do
+
+    call MPI_Barrier(MPI_COMM_WORLD, ierror)
+    print *, "TRANSPOSE"
+    call transpose_y_to_x(wk2,div3)
+
+    ! Compute error
+    print *, "CHECK"
+    call check_err(div3, "(exchange) Y")
+
+    deallocate(uh, vh, wh)
+
+    deallocate(wk2)
+    
   end subroutine test_div_haloY
 
   !=====================================================================
