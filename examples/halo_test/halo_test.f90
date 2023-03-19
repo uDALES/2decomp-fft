@@ -244,6 +244,41 @@ contains
            
     deallocate(vh,wh)
 
+    !! Check exchange (preallocated) version.
+    allocate(uh(i1-1:in+1, j1-1:jn+1, k1-1:kn+1))
+    allocate(vh(i1-1:in+1, j1-1:jn+1, k1-1:kn+1))
+    allocate(wh(i1-1:in+1, j1-1:jn+1, k1-1:kn+1))
+
+    do k=k1,kn
+       do j=j1,jn
+          do i=i1-1,in+1 ! Boundary conditions
+             uh(i, j, k) = u1(i, j, k)
+             vh(i, j, k) = v1(i, j, k)
+             wh(i, j, k) = w1(i, j, k)
+          end do
+       end do
+    end do
+
+    call exchange_halo_x(uh, opt_xlevel=(/ 1, 1, 1 /))
+    call exchange_halo_x(vh, opt_xlevel=(/ 1, 1, 1 /))
+    call exchange_halo_x(wh, opt_xlevel=(/ 1, 1, 1 /))
+    
+    div2 = 0.0_mytype
+    do k=k1,kn
+       do j=j1,jn
+          do i=i1,in
+             div2(i,j,k) = (uh(i+1,j,k)-uh(i-1,j,k)) &
+                  + (vh(i,j+1,k)-vh(i,j-1,k)) &
+                  + (wh(i,j,k+1)-wh(i,j,k-1))
+          end do
+       end do
+    end do
+
+    ! Compute error
+    call check_err(div2, "(exchange) X")
+
+    deallocate(uh, vh, wh)
+    
   end subroutine test_div_haloX
 
   !=====================================================================
