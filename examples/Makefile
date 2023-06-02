@@ -11,7 +11,7 @@ fft_physical_z:
 fft_physical_x:
 	$(MAKE) -C $@ $@
 halo_test:
-	$(MAKE) -C $@ $@
+	$(MAKE) -C $@ all
 io_test:
 	$(MAKE) -C $@ all
 
