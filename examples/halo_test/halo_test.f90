@@ -244,6 +244,45 @@ contains
            
     deallocate(vh,wh)
 
+    !! Check exchange (preallocated) version.
+    allocate(uh(i1-1:in+1, j1-1:jn+1, k1-1:kn+1))
+    allocate(vh(i1-1:in+1, j1-1:jn+1, k1-1:kn+1))
+    allocate(wh(i1-1:in+1, j1-1:jn+1, k1-1:kn+1))
+
+    call test_halo_size(uh, nx_expected, ny_expected, nz_expected, "(exchange) X:u")
+    call test_halo_size(vh, nx_expected, ny_expected, nz_expected, "(exchange) X:v")
+    call test_halo_size(wh, nx_expected, ny_expected, nz_expected, "(exchange) X:w")
+
+    do k=k1,kn
+       do j=j1,jn
+          do i=i1-1,in+1 ! Boundary conditions
+             uh(i, j, k) = u1(i, j, k)
+             vh(i, j, k) = v1(i, j, k)
+             wh(i, j, k) = w1(i, j, k)
+          end do
+       end do
+    end do
+
+    call exchange_halo_x(uh, opt_xlevel=(/ 0, 1, 1 /))
+    call exchange_halo_x(vh, opt_xlevel=(/ 0, 1, 1 /))
+    call exchange_halo_x(wh, opt_xlevel=(/ 0, 1, 1 /))
+    
+    div2 = 0.0_mytype
+    do k=k1,kn
+       do j=j1,jn
+          do i=i1,in
+             div2(i,j,k) = (uh(i+1,j,k)-uh(i-1,j,k)) &
+                  + (vh(i,j+1,k)-vh(i,j-1,k)) &
+                  + (wh(i,j,k+1)-wh(i,j,k-1))
+          end do
+       end do
+    end do
+
+    ! Compute error
+    call check_err(div2, "(exchange) X")
+
+    deallocate(uh, vh, wh)
+    
   end subroutine test_div_haloX
 
   !=====================================================================
@@ -309,8 +348,49 @@ contains
     ! Compute error
     call check_err(div3, "Y")
 
-    deallocate(uh,wh,wk2)
+    deallocate(uh,wh)
+    
+    !! Check exchange (preallocated) version.
+    allocate(uh(i1-1:in+1, j1-1:jn+1, k1-1:kn+1))
+    allocate(vh(i1-1:in+1, j1-1:jn+1, k1-1:kn+1))
+    allocate(wh(i1-1:in+1, j1-1:jn+1, k1-1:kn+1))
 
+    call test_halo_size(uh, nx_expected, ny_expected, nz_expected, "(exchange) Y:u")
+    call test_halo_size(vh, nx_expected, ny_expected, nz_expected, "(exchange) Y:v")
+    call test_halo_size(wh, nx_expected, ny_expected, nz_expected, "(exchange) Y:w")
+    
+    do k=k1,kn
+       do j=j1-1,jn+1 ! Boundary conditions
+          do i=i1,in
+             uh(i, j, k) = u2(i, j, k)
+             vh(i, j, k) = v2(i, j, k)
+             wh(i, j, k) = w2(i, j, k)
+          end do
+       end do
+    end do
+
+    call exchange_halo_y(uh, opt_ylevel=(/ 1, 0, 1 /))
+    call exchange_halo_y(vh, opt_ylevel=(/ 1, 0, 1 /))
+    call exchange_halo_y(wh, opt_ylevel=(/ 1, 0, 1 /))
+
+    do k=k1,kn
+       do j=j1,jn
+          do i=i1,in
+             wk2(i,j,k) = (uh(i+1,j,k)-uh(i-1,j,k)) &
+                  + (vh(i,j+1,k)-vh(i,j-1,k)) &
+                  + (wh(i,j,k+1)-wh(i,j,k-1))
+          end do
+       end do
+    end do
+
+    call transpose_y_to_x(wk2,div3)
+
+    ! Compute error
+    call check_err(div3, "(exchange) Y")
+
+    deallocate(uh, vh, wh)
+    deallocate(wk2)
+    
   end subroutine test_div_haloY
 
   !=====================================================================
@@ -318,6 +398,8 @@ contains
   !=====================================================================
   subroutine test_div_haloZ()
 
+  integer :: i1, in, j1, jn, k1, kn
+    
   ! Expected sizes
   nx_expected = zsize(1) + 2
   ny_expected = zsize(2) + 2
@@ -410,7 +492,59 @@ contains
   ! Compute error
   call check_err(div4, "Z")
 
-  deallocate(uh,vh,wk2,wk3)
+  deallocate(uh,vh)
+  
+  !! Check exchange (preallocated) version.
+#ifdef HALO_GLOBAL
+  i1 = zstart(1); in = zend(1)
+  j1 = zstart(2); jn = zend(2)
+#else
+  i1 = 1; in = zsize(1)
+  j1 = 1; jn = zsize(2)
+#endif
+  k1 = 2; kn = zsize(3) - 1
+
+  allocate(uh(i1-1:in+1, j1-1:jn+1, k1-1:kn+1))
+  allocate(vh(i1-1:in+1, j1-1:jn+1, k1-1:kn+1))
+  allocate(wh(i1-1:in+1, j1-1:jn+1, k1-1:kn+1))
+
+  call test_halo_size(uh, nx_expected, ny_expected, nz_expected, "(exchange) Z:u")
+  call test_halo_size(vh, nx_expected, ny_expected, nz_expected, "(exchange) Z:v")
+  call test_halo_size(wh, nx_expected, ny_expected, nz_expected, "(exchange) Z:w")
+    
+  do k=k1-1,kn+1 ! Boundary conditions
+     do j=j1,jn
+        do i=i1,in
+           uh(i, j, k) = u3(i, j, k)
+           vh(i, j, k) = v3(i, j, k)
+           wh(i, j, k) = w3(i, j, k)
+        end do
+     end do
+  end do
+
+  call exchange_halo_z(uh, opt_zlevel=(/ 1, 1, 0 /))
+  call exchange_halo_z(vh, opt_zlevel=(/ 1, 1, 0 /))
+  call exchange_halo_z(wh, opt_zlevel=(/ 1, 1, 0 /))
+  
+  do k=k1,kn
+     do j=j1,jn
+        do i=i1,in
+           wk3(i,j,k) = (uh(i+1,j,k)-uh(i-1,j,k)) &
+                + (vh(i,j+1,k)-vh(i,j-1,k)) &
+                + (wh(i,j,k+1)-wh(i,j,k-1))
+        end do
+     end do
+  end do
+
+  call transpose_z_to_y(wk3,wk2)
+  call transpose_y_to_x(wk2,div3)
+
+  ! Compute error
+  call check_err(div3, "(exchange) Z")
+
+  deallocate(uh, vh, wh)
+  deallocate(wk2, wk3)
+  
   end subroutine test_div_haloZ
 
   subroutine check_err(divh, pencil)
