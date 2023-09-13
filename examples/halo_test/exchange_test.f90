@@ -93,7 +93,8 @@ contains
        print *, "ERROR: Unknow orientation "//orientation//" test is broken!"
        stop
     end if
-    
+
+    orientation_passing = .true.
     do nlevels = 1, 3
        levels=(/ xhalo * nlevels, yhalo * nlevels, zhalo * nlevels /)
        
@@ -130,14 +131,12 @@ contains
 
     integer, dimension(3), intent(in) :: starts, ends, sizes, levels
     real(mytype), dimension(:,:,:), intent(in) :: u
-    logical, intent(out) :: passing
+    logical, intent(inout) :: passing
     
     integer :: is, ie, js, je, ks, ke
     integer :: i, j, k
     integer :: io, jo, ko
     integer :: idx
-
-    passing = .true.
     
     call valid_range(starts(1), ends(1), sizes(1), nx, levels(1), is, ie)
     call valid_range(starts(2), ends(2), sizes(2), ny, levels(2), js, je)
